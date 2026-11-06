@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mobile One - Component & Compatibility Master</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Outfit"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.05); }
+    ::-webkit-scrollbar-thumb { background: rgba(100, 116, 139, 0.35); border-radius: 9999px; }
+    .highlight-match {
+      background-color: #fde047;
+      color: #713f12;
+      font-weight: 800;
+      padding: 0.1rem 0.3rem;
+      border-radius: 0.25rem;
+    }
+    .dark .highlight-match {
+      background-color: #854d0e;
+      color: #fef08a;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-brand-500 selection:text-white transition-colors duration-200">
+
+  <!-- ==============================================
+       LOCK SCREEN OVERLAY (PIN SECURITY)
+       ============================================== -->
+  <div id="lockScreen" class="fixed inset-0 z-50 bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div class="w-full max-w-sm bg-slate-900/95 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl flex flex-col items-center text-center">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-brand-600 to-indigo-400 text-white flex items-center justify-center text-2xl font-black mb-4 shadow-lg shadow-brand-500/30">
+        🔐
+      </div>
+      <h1 class="text-xl font-extrabold font-display text-white tracking-tight">Mobile One Terminal</h1>
+      <p class="text-xs text-slate-400 mt-1 mb-6">Enter shop PIN to access inventory & compatibility</p>
+
+      <!-- PIN dots display -->
+      <div class="flex items-center justify-center gap-3 mb-6" id="pinDots">
+        <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-700 transition-all dot"></div>
+        <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-700 transition-all dot"></div>
+        <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-700 transition-all dot"></div>
+        <div class="w-3.5 h-3.5 rounded-full border-2 border-slate-700 transition-all dot"></div>
+      </div>
+
+      <div id="lockError" class="text-xs text-rose-400 font-bold mb-4 opacity-0 transition-opacity">
+        Incorrect PIN. Default is 1234
+      </div>
+
+      <!-- Keypad -->
+      <div class="grid grid-cols-3 gap-2.5 w-full max-w-[260px]">
+        <button onclick="pressPin('1')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">1</button>
+        <button onclick="pressPin('2')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">2</button>
+        <button onclick="pressPin('3')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">3</button>
+        <button onclick="pressPin('4')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">4</button>
+        <button onclick="pressPin('5')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">5</button>
+        <button onclick="pressPin('6')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">6</button>
+        <button onclick="pressPin('7')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">7</button>
+        <button onclick="pressPin('8')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">8</button>
+        <button onclick="pressPin('9')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">9</button>
+        <button onclick="clearPin()" class="h-14 rounded-2xl bg-slate-800/40 hover:bg-slate-800 text-xs font-bold text-slate-400 active:scale-95">CLEAR</button>
+        <button onclick="pressPin('0')" class="h-14 rounded-2xl bg-slate-800/80 hover:bg-slate-700 text-lg font-bold text-white transition-all active:scale-95">0</button>
+        <button onclick="backspacePin()" class="h-14 rounded-2xl bg-slate-800/40 hover:bg-slate-800 text-sm font-bold text-slate-400 active:scale-95">⌫</button>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ==============================================
+       HEADER & NAVIGATION
+       ============================================== -->
+  <header class="sticky top-0 z-40 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      
+      <!-- Brand Logo -->
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 text-white flex items-center justify-center font-bold text-lg shadow-md shadow-brand-500/20">
+          ⚡
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-base sm:text-lg font-black font-display tracking-tight text-slate-900 dark:text-white">
+              Mobile One
+            </h1>
+            <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-md bg-brand-100 dark:bg-brand-900/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-700/50">
+              Tech Master
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 hidden sm:block">
+            Tempered Glasses & Combo Displays • Rack & Box Locator
+          </p>
+        </div>
+      </div>
+
+      <!-- Cloud Status, Theme Toggle & Lock Action -->
+      <div class="flex items-center gap-2">
+        <!-- Supabase Status Badge -->
+        <div id="supabaseStatusBadge" onclick="switchTab('settings')" class="cursor-pointer flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 hover:border-slate-400 transition-colors">
+          <span id="cloudStatusDot" class="w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-500"></span>
+          <span id="cloudStatusText" class="hidden sm:inline">Local Cache</span>
+        </div>
+
+        <!-- Light / Dark Mode Toggle Button -->
+        <button id="themeToggleBtn" onclick="toggleTheme()" title="Toggle Light / Dark Mode" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors">
+          <span id="themeIcon" class="text-base">🌙</span>
+        </button>
+
+        <!-- Lock Button -->
+        <button onclick="lockTerminal()" title="Lock Screen" class="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-6xl mx-auto px-4">
+      <nav class="flex space-x-2 border-b border-slate-200 dark:border-slate-800 overflow-x-auto" aria-label="Tabs">
+        <!-- Tab 1: Instant Search -->
+        <button id="tabBtn-search" onclick="switchTab('search')" class="tab-btn flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all border-brand-600 dark:border-brand-500 text-brand-600 dark:text-brand-400">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <span>Instant Search</span>
+        </button>
+
+        <!-- Tab 2: Box Inventory -->
+        <button id="tabBtn-inventory" onclick="switchTab('inventory')" class="tab-btn flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+          </svg>
+          <span>Box Inventory</span>
+          <span id="tabCountBadge" class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold">0</span>
+        </button>
+
+        <!-- Tab 3: Add Item -->
+        <button id="tabBtn-add" onclick="switchTab('add')" class="tab-btn flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+          </svg>
+          <span>Add & Bulk Link</span>
+        </button>
+
+        <!-- Tab 4: Cloud & Supabase -->
+        <button id="tabBtn-settings" onclick="switchTab('settings')" class="tab-btn flex items-center gap-2 py-2.5 px-3.5 border-b-2 font-bold text-xs sm:text-sm whitespace-nowrap transition-all border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 00-9.78 2.096A4.001 4.001 0 003 15z"></path>
+          </svg>
+          <span>Cloud & Settings</span>
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- ==============================================
+       MAIN WORKSPACE
+       ============================================== -->
+  <main class="flex-1 max-w-6xl w-full mx-auto px-4 py-5 flex flex-col">
+
+    <!-- ==============================================
+         TAB 1: INSTANT SEARCH (DUAL FILTER)
+         ============================================== -->
+    <div id="pane-search" class="tab-pane flex flex-col gap-4">
+      
+      <!-- Search Input Container -->
+      <div class="relative">
+        <div class="relative flex items-center">
+          <span class="absolute left-4 text-slate-400 pointer-events-none">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+          </span>
+          <input 
+            id="searchInput" 
+            type="text" 
+            placeholder="Type customer phone model (e.g. C12, Narzo 10, A5 2020, Note 9 Pro, 6.5)..."
+            class="w-full pl-12 sm:pl-14 pr-12 py-4 bg-white dark:bg-slate-800/90 border-2 border-slate-300 dark:border-slate-700 focus:border-brand-500 rounded-2xl shadow-lg dark:shadow-xl outline-none text-base sm:text-lg font-bold text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:ring-4 focus:ring-brand-500/15 transition-all"
+            autofocus
+          />
+          <button id="clearSearchBtn" class="absolute right-3.5 p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white hidden transition-all">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Component Type Filter Toggles -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5">
+        <div class="inline-flex p-1 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm">
+          <button onclick="setComponentFilter('all')" id="filter-all" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-brand-600 text-white shadow-sm">
+            All Components
+          </button>
+          <button onclick="setComponentFilter('glass')" id="filter-glass" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            🛡️ Tempered Glass
+          </button>
+          <button onclick="setComponentFilter('combo')" id="filter-combo" class="filter-chip px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+            🖥️ Display Combos
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <span id="resultsCountBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 shadow-sm">
+            0 matches found
+          </span>
+        </div>
+      </div>
+
+      <!-- Quick Model Search Chips -->
+      <div class="flex flex-wrap items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+        <span class="font-bold mr-1 text-slate-700 dark:text-slate-300">Hot Searches:</span>
+        <button onclick="setSearch('Realme 5')" class="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium shadow-xs">Realme 5</button>
+        <button onclick="setSearch('Narzo 10')" class="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium shadow-xs">Narzo 10</button>
+        <button onclick="setSearch('C12')" class="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium shadow-xs">C12</button>
+        <button onclick="setSearch('A5 2020')" class="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium shadow-xs">A5 2020</button>
+        <button onclick="setSearch('Redmi Note 9')" class="px-2.5 py-1 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-700 dark:text-slate-300 font-medium shadow-xs">Redmi Note 9</button>
+        <button onclick="setSearch('6.5&quot;')" class="px-2.5 py-1 bg-amber-50 dark:bg-slate-800 hover:bg-amber-100 dark:hover:bg-slate-700 border border-amber-200 dark:border-slate-700 rounded-lg text-amber-700 dark:text-amber-400 font-bold shadow-xs">6.5" Display</button>
+      </div>
+
+      <!-- Search Results List -->
+      <div id="resultsList" class="flex flex-col gap-3 min-h-[300px] mt-2">
+        <!-- Rendered dynamically -->
+      </div>
+
+    </div>
+
+
+    <!-- ==============================================
+         TAB 2: BOX & SHELF INVENTORY
+         ============================================== -->
+    <div id="pane-inventory" class="tab-pane hidden flex-col gap-4">
+      
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 p-4 rounded-2xl shadow-sm">
+        <div>
+          <h2 class="text-base sm:text-lg font-black text-slate-900 dark:text-white font-display">
+            Storage Boxes & Shelves
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Organized boxes for Tempered Glasses and Display Combos.
+          </p>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- CSV Quick Export Dropdown / Button in Inventory -->
+          <div class="relative inline-block text-left">
+            <button onclick="toggleCsvDropdown('invCsvMenu')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-600 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all">
+              <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span>Export .CSV</span>
+              <svg class="w-3 h-3 text-slate-500 dark:text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+              </svg>
+            </button>
+            <div id="invCsvMenu" class="hidden absolute right-0 mt-1 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-2xl py-1.5 z-30">
+              <button onclick="exportInventoryToCSV('all'); toggleCsvDropdown('invCsvMenu');" class="w-full text-left px-3.5 py-2 text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium flex items-center justify-between">
+                <span>All Components</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">.csv</span>
+              </button>
+              <button onclick="exportInventoryToCSV('glass'); toggleCsvDropdown('invCsvMenu');" class="w-full text-left px-3.5 py-2 text-xs text-emerald-600 dark:text-emerald-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium flex items-center justify-between">
+                <span>🛡️ Glasses Only</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">.csv</span>
+              </button>
+              <button onclick="exportInventoryToCSV('combo'); toggleCsvDropdown('invCsvMenu');" class="w-full text-left px-3.5 py-2 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium flex items-center justify-between">
+                <span>🖥️ Combos Only</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500 font-mono">.csv</span>
+              </button>
+            </div>
+          </div>
+
+          <button onclick="switchTab('add')" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-md shadow-brand-500/20">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+            </svg>
+            Add New Box
+          </button>
+        </div>
+      </div>
+
+      <!-- Inventory Grid -->
+      <div id="inventoryCards" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         TAB 3: ADD / EDIT BOX & BULK LINK
+         ============================================== -->
+    <div id="pane-add" class="tab-pane hidden flex-col gap-4">
+      <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-5 sm:p-7 shadow-xl max-w-3xl mx-auto w-full">
+        
+        <div class="border-b border-slate-200 dark:border-slate-700 pb-3 mb-5">
+          <h2 id="formTitle" class="text-lg font-black text-slate-900 dark:text-white font-display">
+            Add New Component & Box
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Link up to 300+ phone models that share this Tempered Glass or Display Combo.
+          </p>
+        </div>
+
+        <input type="hidden" id="editItemId" value="">
+        <input type="hidden" id="itemCategory" value="glass">
+
+        <!-- Two Prominent Selection Buttons: Tempered Glass vs Display Combo -->
+        <div class="mb-5">
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+            Select Component Type to Add *
+          </label>
+          <div class="grid grid-cols-2 gap-3 p-1.5 bg-slate-100 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 rounded-2xl">
+            <button 
+              type="button" 
+              id="selectTypeGlassBtn"
+              onclick="setFormCategory('glass')"
+              class="py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all bg-emerald-600 text-white shadow-lg shadow-emerald-600/30">
+              <span class="text-base">🛡️</span>
+              <span>Tempered Glass</span>
+            </button>
+            <button 
+              type="button" 
+              id="selectTypeComboBtn"
+              onclick="setFormCategory('combo')"
+              class="py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800">
+              <span class="text-base">🖥️</span>
+              <span>Display Combo</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <!-- Box / Shelf Location -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Box / Shelf Number *
+            </label>
+            <input 
+              id="boxNumberInput" 
+              type="text" 
+              placeholder="e.g. Box #12 or Rack 2 - Shelf B" 
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-amber-700 dark:text-amber-300 text-sm font-bold outline-none focus:ring-2 focus:ring-brand-500"
+              required
+            />
+          </div>
+
+          <!-- Master Model Name -->
+          <div>
+            <label id="masterModelLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Master Pull Model (Print on Glass Box) *
+            </label>
+            <input 
+              id="masterModelInput" 
+              type="text" 
+              placeholder="e.g. Realme 5 or Redmi Note 9" 
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 text-sm font-black outline-none focus:ring-2 focus:ring-brand-500"
+              required
+            />
+          </div>
+
+          <!-- Dynamic: Screen Size (Glass) OR Combo Company / Brand (Combo) -->
+          <div class="sm:col-span-2">
+            <label id="screenOrCompanyLabel" class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Screen Display Size
+            </label>
+            <input 
+              id="screenSizeInput" 
+              type="text" 
+              placeholder="e.g. 6.5&quot; or 6.53&quot; Notch" 
+              class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-bold outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            <p id="screenOrCompanyHelp" class="text-[11px] text-slate-500 mt-1">Specify display dimension to verify customer fit.</p>
+          </div>
+        </div>
+
+        <!-- Combo Specific Specs (Revealed only for Combo) -->
+        <div id="comboSpecsRow" class="hidden grid-cols-1 sm:grid-cols-2 gap-4 mb-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/60">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Display Quality Type (Combo)
+            </label>
+            <select id="displayQualityInput" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-bold outline-none">
+              <option value="Not Specified">Not Specified</option>
+              <option value="Original Service Pack">Original (Service Pack)</option>
+              <option value="OLED / AMOLED">OLED / AMOLED</option>
+              <option value="Incell High Quality">Incell High Quality</option>
+              <option value="TFT / Normal Copy">TFT / Copy</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+              Frame & Connector Notes
+            </label>
+            <input 
+              id="extraNotesInput" 
+              type="text" 
+              placeholder="e.g. With Frame, 40-pin flex, Waterdrop notch" 
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs outline-none"
+            />
+          </div>
+        </div>
+
+        <!-- Bulk Models Textarea -->
+        <div class="mb-5">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Paste Compatible Models (Up to 300+ models)
+            </label>
+            <span id="bulkCountBadge" class="text-xs font-extrabold text-brand-600 dark:text-brand-400 font-mono">
+              0 models
+            </span>
+          </div>
+          <textarea 
+            id="compatibleModelsInput" 
+            rows="8" 
+            placeholder="Paste your 300+ compatible phone models separated by comma (,) or line by line:&#10;Realme 5&#10;Realme 5i&#10;Realme 5s&#10;Realme C3&#10;Realme C11&#10;Realme C12&#10;Realme C15&#10;Narzo 10&#10;Narzo 20A&#10;Oppo A5 2020&#10;Oppo A9 2020&#10;Vivo Y12..."
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 text-xs sm:text-sm font-mono leading-relaxed outline-none focus:ring-2 focus:ring-brand-500"
+          ></textarea>
+          <div class="flex items-center justify-between mt-1 text-[11px] text-slate-500">
+            <span>Separate names by comma or line break. Duplicates are filtered automatically.</span>
+            <button type="button" onclick="resetForm()" class="text-rose-500 dark:text-rose-400 hover:underline">Clear Fields</button>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-700">
+          <button id="deleteItemBtn" type="button" class="hidden px-4 py-2.5 text-xs font-bold text-rose-500 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors">
+            Delete Box
+          </button>
+          
+          <div class="flex items-center gap-2 ml-auto">
+            <button type="button" onclick="switchTab('inventory')" class="px-4 py-2.5 text-xs sm:text-sm font-bold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white rounded-xl">
+              Cancel
+            </button>
+            <button id="saveItemBtn" type="button" class="px-6 py-2.5 text-xs sm:text-sm font-bold bg-brand-600 hover:bg-brand-500 text-white rounded-xl shadow-lg shadow-brand-500/20 transition-all">
+              Save to Inventory
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ==============================================
+         TAB 4: CLOUD SYNC & SETTINGS
+         ============================================== -->
+    <div id="pane-settings" class="tab-pane hidden flex-col gap-4">
+      <div class="max-w-2xl mx-auto w-full space-y-4">
+        
+        <!-- Supabase Cloud Connection Card -->
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-5 sm:p-6 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">⚡</span>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white font-display">Supabase Cloud Sync (100% Auto-Sync)</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">డేటా మార్చిన వెంటనే ఆటోమేటిక్‌గా అన్ని డివైజ్‌లలో సింక్ అవుతుంది</p>
+              </div>
+            </div>
+            <span id="supabaseConfiguredTag" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+              Not Connected
+            </span>
+          </div>
+
+          <!-- Step-by-Step Connection Instructions in Telugu & English -->
+          <div class="mb-4 p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 text-xs text-slate-700 dark:text-slate-300 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-amber-700 dark:text-amber-300 text-xs uppercase tracking-wider">🛠️ 3 నిమిషాల్లో కనెక్ట్ చేసే సులభమైన పద్ధతి:</span>
+              <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" class="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                Open Supabase ↗
+              </a>
+            </div>
+            <ol class="list-decimal pl-4 space-y-1.5 text-[11px] leading-relaxed">
+              <li><strong class="text-slate-900 dark:text-white">Supabase.com</strong> లో లాగిన్ అయి ఉచితంగా <strong>"New Project"</strong> క్రియేట్ చేయండి.</li>
+              <li>ఎడమవైపు మెనూలో <strong class="text-slate-900 dark:text-white">SQL Editor</strong> నొక్కి, కింద ఉన్న కోడ్ కాపీ చేసి <strong class="text-slate-900 dark:text-white">Run</strong> క్లిక్ చేయండి:</li>
+            </ol>
+            
+            <!-- SQL Copy Box -->
+            <div class="relative bg-slate-900 dark:bg-slate-950 p-2.5 rounded-xl border border-slate-800 font-mono text-[11px] text-emerald-400 flex items-center justify-between overflow-x-auto">
+              <code>create table if not exists compatibility_inventory (id text primary key, data jsonb, updated_at text);</code>
+              <button onclick="copySqlCode()" class="ml-2 px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-[10px] font-bold shrink-0 border border-slate-700">
+                Copy SQL
+              </button>
+            </div>
+
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              3. ఆ తర్వాత <strong class="text-slate-900 dark:text-white">Project Settings ⚙️ ➔ API</strong> లోని <strong>Project URL</strong> మరియు <strong>anon key</strong> ని కింద పేస్ట్ చేసి <strong>"Save & Connect"</strong> నొక్కండి. ఇక మీరు ఏ బటన్ నొక్కనక్కర్లేదు, అంతా ఆటోమేటిక్‌గా సేవ్ అయిపోతుంది!
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                Supabase Project URL
+              </label>
+              <input 
+                id="supabaseUrlInput" 
+                type="text" 
+                placeholder="https://xyzprojectid.supabase.co" 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                Supabase Anon / Public API Key
+              </label>
+              <input 
+                id="supabaseKeyInput" 
+                type="password" 
+                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            <!-- Auto-sync Status Indicator & Manual Fallback -->
+            <div class="flex flex-col sm:flex-row items-center gap-2 pt-2">
+              <button id="saveSupabaseConfigBtn" class="w-full sm:w-auto py-2.5 px-5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20">
+                <span>⚡ Save & Enable Auto-Sync</span>
+              </button>
+              
+              <div class="flex items-center gap-2 w-full sm:w-auto ml-auto">
+                <button id="syncPushSupabaseBtn" title="Force push to cloud" class="flex-1 sm:flex-initial py-2 px-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-1">
+                  <span>Force Push ↑</span>
+                </button>
+                <button id="syncPullSupabaseBtn" title="Force pull from cloud" class="flex-1 sm:flex-initial py-2 px-3 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-xl font-semibold text-[11px] flex items-center justify-center gap-1">
+                  <span>Force Pull ↓</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-700 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-2">
+              <span>✅</span>
+              <span><strong>Auto-Sync యాక్టివ్:</strong> మీరు బాక్స్ సేవ్ చేసినా, డిలీట్ చేసినా ఆటోమేటిక్‌గా క్లౌడ్‌లో సేవ్ అవుతుంది. వేరే ఫోన్‌లో కూడా వెంటనే మారుతుంది.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal PIN Settings Card -->
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-5 sm:p-6 shadow-xl">
+          <div class="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+            <span class="text-xl">🔒</span>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 dark:text-white font-display">Security PIN</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Change 4-digit master passcode</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <input 
+              id="newPinInput" 
+              type="password" 
+              maxlength="4" 
+              placeholder="New 4-digit PIN" 
+              class="px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-sm font-mono tracking-widest text-center w-36 outline-none focus:ring-2 focus:ring-brand-500"
+            />
+            <button id="updatePinBtn" class="px-5 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs">
+              Update PIN
+            </button>
+          </div>
+        </div>
+
+        <!-- Offline JSON Backup Card -->
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-5 sm:p-6 shadow-xl">
+          <div class="flex items-center gap-2.5 border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+            <span class="text-xl">💾</span>
+            <div>
+              <h3 class="text-base font-extrabold text-slate-900 dark:text-white font-display">Data Backup & Spreadsheet Export</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Export as Excel/Sheets CSV or full JSON backup</p>
+            </div>
+          </div>
+
+          <!-- CSV Export Options -->
+          <div class="mb-4 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-700/70">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-300 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Export to Excel / Sheets (.CSV)
+              </span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Compatible with MS Excel & Google Sheets</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button onclick="exportInventoryToCSV('all')" class="py-2.5 px-3 bg-emerald-50 dark:bg-emerald-600/20 hover:bg-emerald-100 dark:hover:bg-emerald-600/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                <span>📄 Export All (.CSV)</span>
+              </button>
+              <button onclick="exportInventoryToCSV('glass')" class="py-2.5 px-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                <span>🛡️ Glasses (.CSV)</span>
+              </button>
+              <button onclick="exportInventoryToCSV('combo')" class="py-2.5 px-3 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                <span>🖥️ Combos (.CSV)</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button id="exportJsonBtn" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 dark:border-transparent">
+              Export Backup (.json)
+            </button>
+            <input type="file" id="importJsonInput" accept=".json" class="hidden">
+            <button onclick="document.getElementById('importJsonInput').click()" class="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 border border-slate-200 dark:border-transparent">
+              Import Backup (.json)
+            </button>
+          </div>
+
+          <div class="pt-4 mt-2 border-t border-slate-200 dark:border-slate-700/50 flex justify-end">
+            <button id="restoreDefaultDataBtn" class="text-xs font-bold text-rose-500 dark:text-rose-400 hover:underline">
+              Reset to Default Realistic Sample Data
+            </button>
+          </div>
+        </div>
+
+        <!-- Automatic Email Backup Settings Card -->
+        <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-3xl p-5 sm:p-6 shadow-xl">
+          <div class="flex items-center justify-between border-b border-slate-200 dark:border-slate-700 pb-3 mb-4">
+            <div class="flex items-center gap-2.5">
+              <span class="text-xl">📧</span>
+              <div>
+                <h3 class="text-base font-extrabold text-slate-900 dark:text-white font-display">Automatic Email Backup</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Send inventory summary & CSV backup directly to your Email ID</p>
+              </div>
+            </div>
+            <span id="emailStatusTag" class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400">
+              Not Set
+            </span>
+          </div>
+
+          <div class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+                Your Email Address (Shop Owner / Technician) *
+              </label>
+              <input 
+                id="shopEmailInput" 
+                type="email" 
+                placeholder="e.g. mobiletechnician@gmail.com" 
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs sm:text-sm font-medium outline-none focus:ring-2 focus:ring-brand-500"
+              />
+            </div>
+
+            <div class="flex items-center gap-2 pt-1">
+              <input type="checkbox" id="autoEmailOnAddToggle" class="w-4 h-4 rounded text-brand-600 bg-white dark:bg-slate-900 border-slate-300 dark:border-slate-700 focus:ring-brand-500">
+              <label for="autoEmailOnAddToggle" class="text-xs text-slate-700 dark:text-slate-300 font-medium cursor-pointer">
+                Prompt to email backup automatically whenever a new box is saved
+              </label>
+            </div>
+
+            <!-- Email Action Buttons -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+              <button id="saveEmailBtn" class="py-2.5 px-4 bg-brand-600 hover:bg-brand-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                <span>Save Email Settings</span>
+              </button>
+              <button id="sendEmailBackupBtn" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all">
+                <span>🚀 Send Backup to Email Now</span>
+              </button>
+            </div>
+
+            <p class="text-[11px] text-slate-500 leading-relaxed pt-1">
+              Clicking "Send Backup" prepares a complete inventory report with all box numbers, total models count, and compatibility list ready to email in one tap.
+            </p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- ==============================================
+       MODAL: FULL COMPATIBLE MODELS LIST
+       ============================================== -->
+  <div id="viewModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 w-full max-w-lg rounded-3xl p-6 shadow-2xl flex flex-col max-h-[85vh]">
+      <div class="flex items-start justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3 mb-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span id="modalTypeBadge" class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800">COMPONENT</span>
+            <span id="modalBoxBadge" class="text-[10px] font-black uppercase px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-400/10 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-400/30">BOX #</span>
+            <span id="modalScreenBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"></span>
+          </div>
+          <h3 id="modalMasterTitle" class="text-xl font-black text-slate-900 dark:text-white font-display">Master Model</h3>
+        </div>
+        <button onclick="closeModal()" class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800">
+          ✕
+        </button>
+      </div>
+
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">All Compatible Models</span>
+        <span id="modalCountBadge" class="text-xs font-mono font-bold text-brand-600 dark:text-brand-400">0 models</span>
+      </div>
+
+      <div id="modalModelsPills" class="flex-1 overflow-y-auto flex flex-wrap gap-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <div class="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+        <button onclick="closeModal()" class="px-5 py-2 bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white rounded-xl text-xs font-bold">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       TOAST NOTIFICATIONS
+       ============================================== -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none px-4 py-3 rounded-2xl bg-slate-900 text-white text-xs sm:text-sm font-bold shadow-2xl flex items-center gap-2.5 border border-slate-700">
+    <span id="toastIcon"></span>
+    <span id="toastMessage"></span>
+  </div>
+
+  <!-- ==============================================
+       JAVASCRIPT LOGIC
+       ============================================== -->
+  <script>
+    /* Default Realistic Seed Data */
+    const SAMPLE_DATA = [
+      {
+        id: "item_realme5_glass",
+        category: "glass",
+        boxNumber: "Box #12 (Rack 2)",
+        masterModel: "Realme 5",
+        screenSize: "6.5\"",
+        displayQuality: "Tempered Glass",
+        extraNotes: "Standard 2.5D / 9H / Waterdrop Notch Cut",
+        compatibleModels: [
+          "Realme 5", "Realme 5i", "Realme 5s", "Realme 6i", "Realme C3", "Realme C3i",
+          "Realme C11", "Realme C11 2021", "Realme C12", "Realme C15", "Realme C15 Qualcomm",
+          "Realme C20", "Realme C20A", "Realme C21", "Realme C21Y", "Realme C25", "Realme C25s",
+          "Realme C25Y", "Realme Narzo 10", "Realme Narzo 10A", "Realme Narzo 20", "Realme Narzo 20A",
+          "Realme Narzo 30A", "Realme Narzo 50i", "Realme Narzo 50i Prime", "Oppo A5 2020",
+          "Oppo A9 2020", "Oppo A11", "Oppo A11x", "Oppo A31", "Oppo A8", "Vivo Y11", "Vivo Y12",
+          "Vivo Y15", "Vivo Y17"
+        ]
+      },
+      {
+        id: "item_redminote9_combo",
+        category: "combo",
+        boxNumber: "Box #C-04 (Top Shelf)",
+        masterModel: "Redmi Note 9",
+        screenSize: "Crown",
+        displayQuality: "Incell High Quality",
+        extraNotes: "With Frame • Punch-hole Top Left • 39-pin flex",
+        compatibleModels: [
+          "Redmi Note 9", "Redmi 10X 4G", "Xiaomi Redmi Note 9 Global"
+        ]
+      },
+      {
+        id: "item_realme_c11_combo",
+        category: "combo",
+        boxNumber: "Box #C-08 (Shelf 1)",
+        masterModel: "Realme C11 / C12 / C15 Combo",
+        screenSize: "Diamond",
+        displayQuality: "Original Service Pack",
+        extraNotes: "Without Frame • Waterdrop Notch",
+        compatibleModels: [
+          "Realme C11", "Realme C12", "Realme C15", "Narzo 20A", "Realme C15 MTK"
+        ]
+      },
+      {
+        id: "item_note7pro_glass",
+        category: "glass",
+        boxNumber: "Box #08",
+        masterModel: "Redmi Note 7 Pro",
+        screenSize: "6.3\"",
+        displayQuality: "Tempered Glass",
+        extraNotes: "Dot Notch",
+        compatibleModels: [
+          "Redmi Note 7", "Redmi Note 7 Pro", "Redmi Note 7S", "Mi A3", "Redmi 7"
+        ]
+      }
+    ];
+
+    const LOCAL_KEY = "mobile_one_inventory_items";
+    const PIN_KEY = "mobile_one_terminal_pin";
+    const SUPABASE_CONFIG_KEY = "mobile_one_supabase_credentials";
+    const EMAIL_CONFIG_KEY = "mobile_one_email_config";
+    const THEME_KEY = "mobile_one_theme_mode";
+
+    let inventory = [];
+    let currentFilter = 'all';
+    let inputPin = "";
+    let supabaseClient = null;
+    let realtimeChannel = null;
+    let isRemoteUpdateInProgress = false;
+
+    // Elements
+    const lockScreen = document.getElementById('lockScreen');
+    const lockError = document.getElementById('lockError');
+    const pinDots = document.getElementById('pinDots').querySelectorAll('.dot');
+
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const resultsList = document.getElementById('resultsList');
+    const resultsCountBadge = document.getElementById('resultsCountBadge');
+    const inventoryCards = document.getElementById('inventoryCards');
+    const tabCountBadge = document.getElementById('tabCountBadge');
+
+    // Add Form Elements
+    const formTitle = document.getElementById('formTitle');
+    const editItemId = document.getElementById('editItemId');
+    const itemCategory = document.getElementById('itemCategory');
+    const boxNumberInput = document.getElementById('boxNumberInput');
+    const masterModelInput = document.getElementById('masterModelInput');
+    const screenSizeInput = document.getElementById('screenSizeInput');
+    const displayQualityInput = document.getElementById('displayQualityInput');
+    const extraNotesInput = document.getElementById('extraNotesInput');
+    const compatibleModelsInput = document.getElementById('compatibleModelsInput');
+    const bulkCountBadge = document.getElementById('bulkCountBadge');
+    const saveItemBtn = document.getElementById('saveItemBtn');
+    const deleteItemBtn = document.getElementById('deleteItemBtn');
+
+    // Supabase & Settings Elements
+    const supabaseUrlInput = document.getElementById('supabaseUrlInput');
+    const supabaseKeyInput = document.getElementById('supabaseKeyInput');
+    const saveSupabaseConfigBtn = document.getElementById('saveSupabaseConfigBtn');
+    const syncPushSupabaseBtn = document.getElementById('syncPushSupabaseBtn');
+    const syncPullSupabaseBtn = document.getElementById('syncPullSupabaseBtn');
+    const supabaseConfiguredTag = document.getElementById('supabaseConfiguredTag');
+    const cloudStatusDot = document.getElementById('cloudStatusDot');
+    const cloudStatusText = document.getElementById('cloudStatusText');
+    const newPinInput = document.getElementById('newPinInput');
+    const updatePinBtn = document.getElementById('updatePinBtn');
+    const exportJsonBtn = document.getElementById('exportJsonBtn');
+    const importJsonInput = document.getElementById('importJsonInput');
+    const restoreDefaultDataBtn = document.getElementById('restoreDefaultDataBtn');
+
+    // Email Elements
+    const shopEmailInput = document.getElementById('shopEmailInput');
+    const autoEmailOnAddToggle = document.getElementById('autoEmailOnAddToggle');
+    const saveEmailBtn = document.getElementById('saveEmailBtn');
+    const sendEmailBackupBtn = document.getElementById('sendEmailBackupBtn');
+    const emailStatusTag = document.getElementById('emailStatusTag');
+
+    // Modal Elements
+    const viewModal = document.getElementById('viewModal');
+    const modalTypeBadge = document.getElementById('modalTypeBadge');
+    const modalBoxBadge = document.getElementById('modalBoxBadge');
+    const modalScreenBadge = document.getElementById('modalScreenBadge');
+    const modalMasterTitle = document.getElementById('modalMasterTitle');
+    const modalCountBadge = document.getElementById('modalCountBadge');
+    const modalModelsPills = document.getElementById('modalModelsPills');
+
+    // Toast
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    const toastIcon = document.getElementById('toastIcon');
+
+    // Theme Elements
+    const themeIcon = document.getElementById('themeIcon');
+
+    // Initialization
+    window.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadLocalData();
+      initSupabase();
+      loadEmailSettings();
+      renderAll();
+      setupEvents();
+      setupAutoCountListener();
+    });
+
+    // Theme Management (Light / Dark)
+    window.initTheme = function() {
+      const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+      applyTheme(savedTheme);
+    };
+
+    window.toggleTheme = function() {
+      const isCurrentlyDark = document.documentElement.classList.contains('dark');
+      const nextTheme = isCurrentlyDark ? 'light' : 'dark';
+      applyTheme(nextTheme);
+      localStorage.setItem(THEME_KEY, nextTheme);
+    };
+
+    function applyTheme(theme) {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+        if (themeIcon) themeIcon.textContent = '☀️';
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (themeIcon) themeIcon.textContent = '🌙';
+      }
+    }
+
+    // PIN Authentication
+    function getStoredPin() {
+      return localStorage.getItem(PIN_KEY) || "1234";
+    }
+
+    window.pressPin = function(digit) {
+      if (inputPin.length < 4) {
+        inputPin += digit;
+        updatePinDisplay();
+      }
+      if (inputPin.length === 4) {
+        verifyPin();
+      }
+    };
+
+    window.clearPin = function() {
+      inputPin = "";
+      updatePinDisplay();
+      if (lockError) lockError.classList.add('opacity-0');
+    };
+
+    window.backspacePin = function() {
+      inputPin = inputPin.slice(0, -1);
+      updatePinDisplay();
+      if (lockError) lockError.classList.add('opacity-0');
+    };
+
+    function updatePinDisplay() {
+      pinDots.forEach((dot, idx) => {
+        if (idx < inputPin.length) {
+          dot.classList.add('bg-brand-500', 'border-brand-500');
+          dot.classList.remove('bg-transparent');
+        } else {
+          dot.classList.remove('bg-brand-500', 'border-brand-500');
+          dot.classList.add('bg-transparent');
+        }
+      });
+    }
+
+    function verifyPin() {
+      const stored = getStoredPin();
+      if (inputPin === stored) {
+        lockScreen.classList.add('hidden');
+        inputPin = "";
+        updatePinDisplay();
+        if (lockError) lockError.classList.add('opacity-0');
+        setTimeout(() => {
+          if (searchInput) searchInput.focus();
+        }, 100);
+      } else {
+        if (lockError) {
+          lockError.textContent = "Incorrect PIN. Please re-enter.";
+          lockError.classList.remove('opacity-0');
+        }
+        setTimeout(() => {
+          inputPin = "";
+          updatePinDisplay();
+        }, 400);
+      }
+    }
+
+    window.lockTerminal = function() {
+      inputPin = "";
+      updatePinDisplay();
+      if (lockError) lockError.classList.add('opacity-0');
+      lockScreen.classList.remove('hidden');
+    };
+
+    // Navigation Switcher
+    window.switchTab = function(tabName) {
+      document.querySelectorAll('.tab-pane').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-brand-500', 'text-brand-400');
+        btn.classList.add('border-transparent', 'text-slate-400');
+      });
+
+      const activePane = document.getElementById(`pane-${tabName}`);
+      const activeBtn = document.getElementById(`tabBtn-${tabName}`);
+
+      if (activePane) activePane.classList.remove('hidden');
+      if (activeBtn) {
+        activeBtn.classList.remove('border-transparent', 'text-slate-400');
+        activeBtn.classList.add('border-brand-500', 'text-brand-400');
+      }
+
+      if (tabName === 'search') {
+        setTimeout(() => searchInput.focus(), 50);
+      }
+    };
+
+    // Filter Chips (All, Glass, Combo)
+    window.setComponentFilter = function(category) {
+      currentFilter = category;
+      document.querySelectorAll('.filter-chip').forEach(btn => {
+        btn.classList.remove('bg-brand-600', 'text-white');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeChip = document.getElementById(`filter-${category}`);
+      if (activeChip) {
+        activeChip.classList.add('bg-brand-600', 'text-white');
+        activeChip.classList.remove('text-slate-400');
+      }
+
+      renderSearchResults(searchInput.value);
+    };
+
+    // Local Data Storage
+    function loadLocalData() {
+      try {
+        const stored = localStorage.getItem(LOCAL_KEY);
+        if (stored) {
+          inventory = JSON.parse(stored);
+        } else {
+          inventory = SAMPLE_DATA;
+          saveLocalData();
+        }
+      } catch (e) {
+        inventory = SAMPLE_DATA;
+      }
+    }
+
+    function saveLocalData() {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(inventory));
+      updateCounts();
+    }
+
+    function updateCounts() {
+      tabCountBadge.textContent = inventory.length;
+    }
+
+    function cleanStr(str) {
+      return (str || '').toLowerCase().replace(/[\s\-_/."']/g, '');
+    }
+
+    function highlightText(fullText, query) {
+      if (!query.trim()) return fullText;
+      const cleanQ = query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${cleanQ})`, 'gi');
+      return fullText.replace(regex, '<span class="highlight-match">$1</span>');
+    }
+
+    // Render Search Results
+    function renderSearchResults(filterText = '') {
+      const q = filterText.trim();
+      const cleanQ = cleanStr(q);
+
+      if (q.length > 0) {
+        clearSearchBtn.classList.remove('hidden');
+      } else {
+        clearSearchBtn.classList.add('hidden');
+      }
+
+      const matches = [];
+
+      inventory.forEach(item => {
+        if (currentFilter !== 'all' && item.category !== currentFilter) {
+          return;
+        }
+
+        const isMasterMatch = cleanStr(item.masterModel).includes(cleanQ);
+        const isBoxMatch = cleanStr(item.boxNumber).includes(cleanQ);
+        const isScreenMatch = cleanStr(item.screenSize || '').includes(cleanQ);
+        const isQualityMatch = cleanStr(item.displayQuality || '').includes(cleanQ);
+
+        (item.compatibleModels || []).forEach(model => {
+          const isModelMatch = cleanStr(model).includes(cleanQ);
+          if (cleanQ === '' || isModelMatch || isMasterMatch || isBoxMatch || isScreenMatch || isQualityMatch) {
+            matches.push({
+              searchedModel: model,
+              category: item.category,
+              masterModel: item.masterModel,
+              screenSize: item.screenSize || '',
+              displayQuality: item.displayQuality || '',
+              extraNotes: item.extraNotes || '',
+              boxNumber: item.boxNumber,
+              itemId: item.id,
+              totalFamilyCount: item.compatibleModels.length,
+              isExact: cleanStr(model) === cleanQ
+            });
+          }
+        });
+      });
+
+      // Sort: exact matches first
+      matches.sort((a, b) => {
+        if (a.isExact && !b.isExact) return -1;
+        if (!a.isExact && b.isExact) return 1;
+        return a.searchedModel.localeCompare(b.searchedModel);
+      });
+
+      resultsCountBadge.textContent = `${matches.length} matches`;
+
+      if (matches.length === 0) {
+        resultsList.innerHTML = `
+          <div class="bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 rounded-3xl p-8 text-center flex flex-col items-center justify-center my-4 shadow-sm">
+            <div class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 dark:text-amber-400 flex items-center justify-center mb-3 text-2xl font-bold">
+              🔍
+            </div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1 font-display">
+              No matching phone model found for "${escapeHtml(q)}"
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-4">
+              You can create a new box or link this phone model to an existing glass or combo display.
+            </p>
+            <button onclick="prepareQuickAdd('${escapeHtml(q)}')" class="px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-xs font-bold transition-all shadow-md">
+              + Link & Add "${escapeHtml(q)}"
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      const visible = matches.slice(0, 50);
+      let html = '';
+
+      visible.forEach(m => {
+        const isGlass = m.category === 'glass';
+        const typeBadge = isGlass 
+          ? `<span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/70">🛡️ Glass</span>`
+          : `<span class="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/70">🖥️ Combo Display</span>`;
+
+        const hCustomer = highlightText(escapeHtml(m.searchedModel), q);
+        const hMaster = highlightText(escapeHtml(m.masterModel), q);
+        const hBox = highlightText(escapeHtml(m.boxNumber), q);
+        const hDetail = m.screenSize ? highlightText(escapeHtml(m.screenSize), q) : '';
+
+        html += `
+          <div class="bg-white dark:bg-slate-800/90 border-2 border-slate-200 dark:border-slate-700 hover:border-brand-500 dark:hover:border-brand-500/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm hover:shadow-md transition-all">
+            
+            <!-- Left Info: Customer Model -->
+            <div class="flex items-start gap-3.5">
+              <div class="mt-0.5 w-11 h-11 rounded-2xl ${isGlass ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20'} flex items-center justify-center shrink-0 text-lg font-bold">
+                ${isGlass ? '🛡️' : '🖥️'}
+              </div>
+
+              <div>
+                <div class="flex items-center gap-2 flex-wrap">
+                  ${typeBadge}
+                  ${m.isExact ? '<span class="text-[10px] bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 font-bold px-2 py-0.5 rounded-full">Exact Customer Model</span>' : ''}
+                  <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Fits with ${m.totalFamilyCount} models</span>
+                </div>
+                
+                <h3 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white font-display mt-0.5">
+                  ${hCustomer}
+                </h3>
+
+                ${!isGlass && m.displayQuality ? `
+                  <div class="mt-1 flex items-center gap-2 flex-wrap text-xs">
+                    <span class="text-amber-600 dark:text-amber-400 font-bold">${escapeHtml(m.displayQuality)}</span>
+                    ${m.extraNotes ? `<span class="text-slate-500 dark:text-slate-400 text-[11px]">• ${escapeHtml(m.extraNotes)}</span>` : ''}
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+
+            <!-- Right Info: Master Glass / Combo Model & Box # -->
+            <div class="flex items-center sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 dark:border-slate-700/60">
+              
+              <div class="flex-1 sm:flex-initial text-left sm:text-right">
+                <span class="text-[10px] block font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Pull This Component
+                </span>
+                <span class="text-lg sm:text-xl font-black text-brand-600 dark:text-brand-400 font-display">
+                  ${hMaster}
+                </span>
+                ${m.screenSize ? `
+                  <div class="mt-0.5">
+                    <span class="text-[11px] font-extrabold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 ${isGlass ? 'text-amber-700 dark:text-amber-300' : 'text-indigo-700 dark:text-indigo-300'}">
+                      ${isGlass ? 'Display: ' : 'Company/Brand: '}${hDetail}
+                    </span>
+                  </div>
+                ` : ''}
+              </div>
+
+              <!-- High Contrast Box Badge for Shop Visibility -->
+              <div class="flex flex-col items-center justify-center min-w-[105px] px-3.5 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-400/10 border-2 border-amber-300 dark:border-amber-400/40 text-amber-800 dark:text-amber-300 shadow-xs">
+                <span class="text-[9px] uppercase font-black tracking-widest text-amber-700 dark:text-amber-400/80">BOX / SHELF</span>
+                <span class="text-base sm:text-lg font-black font-display text-center leading-tight">
+                  ${hBox}
+                </span>
+              </div>
+
+            </div>
+
+          </div>
+        `;
+      });
+
+      if (matches.length > 50) {
+        html += `
+          <div class="p-3 text-center text-xs text-slate-500 dark:text-slate-400">
+            Showing first 50 results of ${matches.length}. Type more characters to narrow down.
+          </div>
+        `;
+      }
+
+      resultsList.innerHTML = html;
+    }
+
+    // Render Box Inventory Grid
+    function renderInventoryGrid() {
+      if (inventory.length === 0) {
+        inventoryCards.innerHTML = `
+          <div class="col-span-full text-center py-12 bg-white dark:bg-slate-800/50 rounded-3xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+            <p class="text-slate-500 dark:text-slate-400 text-sm mb-3">No inventory items recorded yet.</p>
+            <button onclick="switchTab('add')" class="px-4 py-2 bg-brand-600 text-white rounded-xl text-xs font-bold">
+              + Add First Box
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      inventory.forEach(item => {
+        const isGlass = item.category === 'glass';
+        const count = (item.compatibleModels || []).length;
+        const preview = (item.compatibleModels || []).slice(0, 3).join(', ');
+
+        html += `
+          <div class="bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/90 rounded-2xl p-4 flex flex-col justify-between hover:border-brand-500 dark:hover:border-brand-500/80 transition-all shadow-sm hover:shadow-md">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <span class="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-wider">
+                      ${escapeHtml(item.boxNumber)}
+                    </span>
+                    <span class="text-[10px] font-bold px-1.5 py-0.2 rounded ${isGlass ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800' : 'bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800'}">
+                      ${isGlass ? 'Glass' : 'Combo'}
+                    </span>
+                    ${item.screenSize ? `<span class="text-[10px] font-bold px-1.5 py-0.2 rounded bg-slate-100 dark:bg-slate-900 ${isGlass ? 'text-slate-700 dark:text-slate-300' : 'text-indigo-700 dark:text-indigo-300'} border border-slate-200 dark:border-slate-700">${isGlass ? '' : 'Brand: '}${escapeHtml(item.screenSize)}</span>` : ''}
+                  </div>
+                  
+                  <h3 class="text-lg font-black text-slate-900 dark:text-white font-display mt-1">
+                    ${escapeHtml(item.masterModel)}
+                  </h3>
+                </div>
+
+                <span class="px-2.5 py-1 text-xs font-bold rounded-lg bg-brand-50 dark:bg-brand-950/80 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 shrink-0 font-mono">
+                  ${count} models
+                </span>
+              </div>
+
+              ${!isGlass && item.displayQuality ? `
+                <div class="mt-2 text-xs text-amber-700 dark:text-amber-300/90 font-bold">
+                  ${escapeHtml(item.displayQuality)} ${item.extraNotes ? `• <span class="text-slate-500 dark:text-slate-400 font-normal">${escapeHtml(item.extraNotes)}</span>` : ''}
+                </div>
+              ` : ''}
+
+              <div class="mt-3 bg-slate-50 dark:bg-slate-900/70 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Compatible Family:</span>
+                <p class="text-xs text-slate-700 dark:text-slate-300 line-clamp-2 font-mono">
+                  ${escapeHtml(preview)} ${count > 3 ? `+ ${count - 3} more` : ''}
+                </p>
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/60 flex items-center justify-between gap-2">
+              <button onclick="openModal('${item.id}')" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline">
+                View All (${count})
+              </button>
+
+              <div class="flex items-center gap-1.5">
+                <button onclick="setSearch('${escapeHtml(item.masterModel)}')" class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200 dark:border-transparent">
+                  Search
+                </button>
+                <button onclick="prepareEdit('${item.id}')" class="text-xs px-2.5 py-1 rounded-lg bg-brand-50 dark:bg-brand-950 text-brand-700 dark:text-brand-300 border border-brand-200 dark:border-brand-800 hover:bg-brand-100 dark:hover:bg-brand-900 font-bold">
+                  Edit
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      inventoryCards.innerHTML = html;
+    }
+
+    function renderAll() {
+      updateCounts();
+      renderSearchResults(searchInput.value);
+      renderInventoryGrid();
+    }
+
+    // Modal: View Full List
+    window.openModal = function(itemId) {
+      const item = inventory.find(i => i.id === itemId);
+      if (!item) return;
+
+      modalTypeBadge.textContent = item.category === 'glass' ? 'TEMPERED GLASS' : 'DISPLAY COMBO';
+      modalBoxBadge.textContent = item.boxNumber;
+      modalScreenBadge.textContent = item.screenSize ? `${item.screenSize}` : '';
+      modalMasterTitle.textContent = item.masterModel;
+      modalCountBadge.textContent = `${item.compatibleModels.length} models`;
+
+      modalModelsPills.innerHTML = item.compatibleModels.map(m => `
+        <span class="px-2.5 py-1 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-lg text-xs font-medium border border-slate-200 dark:border-slate-700 shadow-xs">
+          ${escapeHtml(m)}
+        </span>
+      `).join('');
+
+      viewModal.classList.remove('hidden');
+    };
+
+    window.closeModal = function() {
+      viewModal.classList.add('hidden');
+    };
+
+    // Helper: Bulk Model Parser
+    function parseModels(rawText) {
+      if (!rawText) return [];
+      const parts = rawText.split(/[\r\n,]+/);
+      const set = new Set();
+      parts.forEach(p => {
+        let t = p.trim();
+        t = t.replace(/^[\d+.)\-*\s]+/, '').trim();
+        if (t.length > 1) {
+          set.add(t);
+        }
+      });
+      return Array.from(set);
+    }
+
+    function setupAutoCountListener() {
+      compatibleModelsInput.addEventListener('input', () => {
+        const list = parseModels(compatibleModelsInput.value);
+        bulkCountBadge.textContent = `${list.length} models`;
+      });
+    }
+
+    // Dynamic Switcher for Form Category (Glass vs Combo)
+    window.setFormCategory = function(cat) {
+      itemCategory.value = cat;
+      const glassBtn = document.getElementById('selectTypeGlassBtn');
+      const comboBtn = document.getElementById('selectTypeComboBtn');
+      const comboSpecs = document.getElementById('comboSpecsRow');
+      const screenLabel = document.getElementById('screenOrCompanyLabel');
+      const screenInput = document.getElementById('screenSizeInput');
+      const screenHelp = document.getElementById('screenOrCompanyHelp');
+      const masterLabel = document.getElementById('masterModelLabel');
+
+      if (cat === 'glass') {
+        glassBtn.className = "py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all bg-emerald-600 text-white shadow-lg shadow-emerald-600/30";
+        comboBtn.className = "py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+        
+        comboSpecs.classList.add('hidden');
+        comboSpecs.classList.remove('grid');
+
+        masterLabel.textContent = "Master Pull Model (Print on Glass Box) *";
+        masterModelInput.placeholder = "e.g. Realme 5 or Redmi Note 9";
+
+        screenLabel.textContent = "Screen Display Size";
+        screenInput.placeholder = 'e.g. 6.5" or 6.53" Notch';
+        screenHelp.textContent = "Specify display dimension to verify customer fit.";
+      } else {
+        comboBtn.className = "py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
+        glassBtn.className = "py-3 px-4 rounded-xl text-xs sm:text-sm font-black flex items-center justify-center gap-2 transition-all text-slate-400 hover:text-white hover:bg-slate-800";
+        
+        comboSpecs.classList.remove('hidden');
+        comboSpecs.classList.add('grid');
+
+        masterLabel.textContent = "Master Pull Model (Display Combo Name) *";
+        masterModelInput.placeholder = "e.g. Realme C11 / C12 / C15 Combo";
+
+        screenLabel.textContent = "Combo Company / Brand Name";
+        screenInput.placeholder = "e.g. OG / Diamond / Crown / YX / Gold / Original";
+        screenHelp.textContent = "Enter combo manufacturing brand or supplier company name.";
+      }
+    };
+
+    // Quick Add helper
+    window.prepareQuickAdd = function(modelName) {
+      resetForm();
+      masterModelInput.value = modelName;
+      compatibleModelsInput.value = modelName ? `${modelName}\n` : '';
+      bulkCountBadge.textContent = modelName ? '1 model' : '0 models';
+      switchTab('add');
+      boxNumberInput.focus();
+    };
+
+    // Edit Item
+    window.prepareEdit = function(itemId) {
+      const item = inventory.find(i => i.id === itemId);
+      if (!item) return;
+
+      editItemId.value = item.id;
+      formTitle.textContent = `Edit Box: ${item.masterModel} (${item.boxNumber})`;
+      setFormCategory(item.category || 'glass');
+      boxNumberInput.value = item.boxNumber || '';
+      masterModelInput.value = item.masterModel || '';
+      screenSizeInput.value = item.screenSize || '';
+      displayQualityInput.value = item.displayQuality || 'Not Specified';
+      extraNotesInput.value = item.extraNotes || '';
+      compatibleModelsInput.value = (item.compatibleModels || []).join('\n');
+      bulkCountBadge.textContent = `${(item.compatibleModels || []).length} models`;
+      deleteItemBtn.classList.remove('hidden');
+
+      switchTab('add');
+      boxNumberInput.focus();
+    };
+
+    window.resetForm = function() {
+      editItemId.value = '';
+      formTitle.textContent = "Add New Component & Box";
+      setFormCategory('glass');
+      boxNumberInput.value = '';
+      masterModelInput.value = '';
+      screenSizeInput.value = '';
+      displayQualityInput.value = 'Not Specified';
+      extraNotesInput.value = '';
+      compatibleModelsInput.value = '';
+      bulkCountBadge.textContent = '0 models';
+      deleteItemBtn.classList.add('hidden');
+    };
+
+    // Search Box Quick Keywords
+    window.setSearch = function(str) {
+      switchTab('search');
+      searchInput.value = str;
+      renderSearchResults(str);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Event Handlers
+    function setupEvents() {
+      searchInput.addEventListener('input', (e) => {
+        renderSearchResults(e.target.value);
+      });
+
+      clearSearchBtn.addEventListener('click', () => {
+        searchInput.value = '';
+        renderSearchResults('');
+        searchInput.focus();
+      });
+
+      // Save Item
+      saveItemBtn.addEventListener('click', async () => {
+        const categoryVal = itemCategory.value;
+        const boxVal = boxNumberInput.value.trim();
+        const masterVal = masterModelInput.value.trim();
+        const screenVal = screenSizeInput.value.trim();
+        const qualityVal = displayQualityInput.value;
+        const notesVal = extraNotesInput.value.trim();
+        let models = parseModels(compatibleModelsInput.value);
+
+        if (!boxVal) {
+          showToast('Please provide a Box or Shelf location', '⚠️');
+          boxNumberInput.focus();
+          return;
+        }
+
+        if (!masterVal) {
+          showToast('Please provide Master Component Name', '⚠️');
+          masterModelInput.focus();
+          return;
+        }
+
+        if (!models.some(m => cleanStr(m) === cleanStr(masterVal))) {
+          models.unshift(masterVal);
+        }
+
+        const currentId = editItemId.value;
+
+        if (currentId) {
+          const index = inventory.findIndex(i => i.id === currentId);
+          if (index !== -1) {
+            inventory[index] = {
+              ...inventory[index],
+              category: categoryVal,
+              boxNumber: boxVal,
+              masterModel: masterVal,
+              screenSize: screenVal,
+              displayQuality: qualityVal,
+              extraNotes: notesVal,
+              compatibleModels: models
+            };
+          }
+          showToast(`Box '${boxVal}' updated!`, '✅');
+        } else {
+          const newItem = {
+            id: 'box_' + Date.now(),
+            category: categoryVal,
+            boxNumber: boxVal,
+            masterModel: masterVal,
+            screenSize: screenVal,
+            displayQuality: qualityVal,
+            extraNotes: notesVal,
+            compatibleModels: models
+          };
+          inventory.unshift(newItem);
+          showToast(`New Box '${boxVal}' saved!`, '✅');
+        }
+
+        saveLocalData();
+        renderAll();
+        resetForm();
+        switchTab('inventory');
+
+        // Automatic background push to cloud
+        if (supabaseClient) {
+          autoPushToCloud();
+        }
+
+        // Auto email trigger check
+        checkAutoEmailTrigger(boxVal, masterVal, models.length);
+      });
+
+      // Delete Item
+      deleteItemBtn.addEventListener('click', () => {
+        const id = editItemId.value;
+        if (!id) return;
+
+        inventory = inventory.filter(i => i.id !== id);
+        saveLocalData();
+        renderAll();
+        resetForm();
+        switchTab('inventory');
+        showToast('Box removed from inventory', '🗑️');
+
+        if (supabaseClient) {
+          autoPushToCloud();
+        }
+      });
+
+      // Security PIN Update
+      updatePinBtn.addEventListener('click', () => {
+        const pin = newPinInput.value.trim();
+        if (pin.length === 4 && /^\d+$/.test(pin)) {
+          localStorage.setItem(PIN_KEY, pin);
+          newPinInput.value = '';
+          showToast('PIN updated successfully!', '🔒');
+        } else {
+          showToast('PIN must be exactly 4 digits (numbers only)', '⚠️');
+        }
+      });
+
+      // JSON Backup & Restore
+      exportJsonBtn.addEventListener('click', () => {
+        const jsonStr = JSON.stringify(inventory, null, 2);
+        const blob = new Blob([jsonStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mobile_one_backup_${new Date().toISOString().slice(0, 10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        showToast('Offline JSON backup downloaded', '💾');
+      });
+
+      importJsonInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+          try {
+            const parsed = JSON.parse(evt.target.result);
+            if (Array.isArray(parsed)) {
+              inventory = parsed;
+              saveLocalData();
+              renderAll();
+              switchTab('inventory');
+              showToast('Backup restored successfully!', '🎉');
+            } else {
+              showToast('Invalid JSON file format', '❌');
+            }
+          } catch (err) {
+            showToast('Failed to parse backup JSON file', '❌');
+          }
+          importJsonInput.value = '';
+        };
+        reader.readAsText(file);
+      });
+
+      // Restore Sample Data
+      if (restoreDefaultDataBtn) {
+        restoreDefaultDataBtn.addEventListener('click', () => {
+          inventory = [...SAMPLE_DATA];
+          saveLocalData();
+          renderAll();
+          showToast('Sample data restored successfully!', '🔄');
+        });
+      }
+
+      // Email event listeners
+      saveEmailBtn.addEventListener('click', saveEmailSettings);
+      sendEmailBackupBtn.addEventListener('click', sendEmailBackupNow);
+
+      // Supabase event listeners
+      if (saveSupabaseConfigBtn) saveSupabaseConfigBtn.addEventListener('click', saveSupabaseConfig);
+      if (syncPushSupabaseBtn) syncPushSupabaseBtn.addEventListener('click', () => syncPushToSupabase(true));
+      if (syncPullSupabaseBtn) syncPullSupabaseBtn.addEventListener('click', () => syncPullFromSupabase(true));
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#invCsvMenu') && !e.target.closest('button[onclick*="invCsvMenu"]')) {
+          const m = document.getElementById('invCsvMenu');
+          if (m) m.classList.add('hidden');
+        }
+      });
+
+      // Quick SQL Copy Helper
+      window.copySqlCode = function() {
+        const sql = `create table if not exists compatibility_inventory (id text primary key, data jsonb, updated_at text);`;
+        const temp = document.createElement('textarea');
+        temp.value = sql;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        document.body.removeChild(temp);
+        showToast('SQL Code copied to clipboard!', '📋');
+      };
+
+      // Keyboard support for typing PIN and Navigation
+      window.addEventListener('keydown', (e) => {
+        if (!lockScreen.classList.contains('hidden')) {
+          if (e.key >= '0' && e.key <= '9') {
+            pressPin(e.key);
+          } else if (e.key === 'Backspace') {
+            backspacePin();
+          } else if (e.key === 'Escape') {
+            clearPin();
+          }
+          return;
+        }
+
+        if (e.key === 'Escape') {
+          if (!viewModal.classList.contains('hidden')) {
+            closeModal();
+          } else {
+            searchInput.value = '';
+            renderSearchResults('');
+          }
+        }
+      });
+    }
+
+    // Emergency Bypass helper in case PIN was misconfigured
+    window.bypassLock = function() {
+      localStorage.setItem(PIN_KEY, "1234");
+      lockScreen.classList.add('hidden');
+      inputPin = "";
+      updatePinDisplay();
+      showToast('PIN reset to 1234 and unlocked!', '🔓');
+      setTimeout(() => searchInput.focus(), 100);
+    };
+
+    // ==============================================
+    // SUPABASE AUTO-SYNC & REALTIME CLIENT
+    // ==============================================
+    async function initSupabase() {
+      try {
+        const stored = localStorage.getItem(SUPABASE_CONFIG_KEY);
+        if (stored) {
+          const cfg = JSON.parse(stored);
+          if (cfg.url && cfg.key) {
+            supabaseUrlInput.value = cfg.url;
+            supabaseKeyInput.value = cfg.key;
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+              supabaseClient = window.supabase.createClient(cfg.url, cfg.key);
+              updateCloudStatusUI(true);
+              
+              await autoPullFromCloud();
+              setupRealtimeSubscription();
+              return;
+            }
+          }
+        }
+      } catch (err) {
+        console.warn("Supabase init error:", err);
+      }
+      updateCloudStatusUI(false);
+    }
+
+    async function saveSupabaseConfig() {
+      const url = supabaseUrlInput.value.trim();
+      const key = supabaseKeyInput.value.trim();
+
+      if (!url || !key) {
+        showToast('Please provide both Supabase URL & Key', '⚠️');
+        return;
+      }
+
+      try {
+        localStorage.setItem(SUPABASE_CONFIG_KEY, JSON.stringify({ url, key }));
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
+          supabaseClient = window.supabase.createClient(url, key);
+          updateCloudStatusUI(true);
+          showToast('Connected! Performing initial auto-sync...', '⚡');
+          
+          await autoPullFromCloud();
+          setupRealtimeSubscription();
+        } else {
+          showToast('Supabase JS library not loaded', '❌');
+        }
+      } catch (e) {
+        showToast('Failed to initialize Supabase client', '❌');
+      }
+    }
+
+    // Auto Background Push
+    async function autoPushToCloud() {
+      if (!supabaseClient || isRemoteUpdateInProgress) return;
+
+      try {
+        updateCloudStatusDot('saving');
+        const { error } = await supabaseClient
+          .from('compatibility_inventory')
+          .upsert({ 
+            id: 'main_inventory', 
+            data: inventory, 
+            updated_at: new Date().toISOString() 
+          });
+
+        if (error) throw error;
+        updateCloudStatusDot('synced');
+      } catch (err) {
+        console.error("Auto push error:", err);
+        updateCloudStatusDot('error');
+      }
+    }
+
+    // Auto Background Pull
+    async function autoPullFromCloud() {
+      if (!supabaseClient) return;
+
+      try {
+        updateCloudStatusDot('saving');
+        const { data, error } = await supabaseClient
+          .from('compatibility_inventory')
+          .select('data')
+          .eq('id', 'main_inventory')
+          .single();
+
+        if (error && error.code !== 'PGRST116') throw error;
+
+        if (data && Array.isArray(data.data) && data.data.length > 0) {
+          isRemoteUpdateInProgress = true;
+          inventory = data.data;
+          saveLocalData();
+          renderAll();
+          isRemoteUpdateInProgress = false;
+        } else if (inventory.length > 0) {
+          await autoPushToCloud();
+        }
+        updateCloudStatusDot('synced');
+      } catch (err) {
+        console.error("Auto pull error:", err);
+        updateCloudStatusDot('error');
+      }
+    }
+
+    // Realtime multi-device subscription
+    function setupRealtimeSubscription() {
+      if (!supabaseClient) return;
+
+      try {
+        if (realtimeChannel) {
+          supabaseClient.removeChannel(realtimeChannel);
+        }
+
+        realtimeChannel = supabaseClient
+          .channel('public:compatibility_inventory')
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'compatibility_inventory', filter: 'id=eq.main_inventory' },
+            (payload) => {
+              if (payload.new && Array.isArray(payload.new.data)) {
+                isRemoteUpdateInProgress = true;
+                inventory = payload.new.data;
+                saveLocalData();
+                renderAll();
+                isRemoteUpdateInProgress = false;
+                showToast('Cloud updated from another device!', '🔄');
+              }
+            }
+          )
+          .subscribe();
+      } catch (err) {
+        console.warn("Realtime subscription warning:", err);
+      }
+    }
+
+    function updateCloudStatusDot(state) {
+      if (!cloudStatusDot) return;
+      if (state === 'saving') {
+        cloudStatusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
+        cloudStatusText.textContent = "Syncing...";
+      } else if (state === 'synced') {
+        cloudStatusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+        cloudStatusText.textContent = "Cloud Synced";
+      } else if (state === 'error') {
+        cloudStatusDot.className = "w-2 h-2 rounded-full bg-rose-500";
+        cloudStatusText.textContent = "Sync Error";
+      }
+    }
+
+    function updateCloudStatusUI(isConnected) {
+      if (isConnected) {
+        if (supabaseConfiguredTag) {
+          supabaseConfiguredTag.textContent = "Auto-Sync Active";
+          supabaseConfiguredTag.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800";
+        }
+        updateCloudStatusDot('synced');
+      } else {
+        if (supabaseConfiguredTag) {
+          supabaseConfiguredTag.textContent = "Not Connected";
+          supabaseConfiguredTag.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-700 text-slate-400";
+        }
+        if (cloudStatusDot) {
+          cloudStatusDot.className = "w-2 h-2 rounded-full bg-slate-500";
+        }
+        if (cloudStatusText) {
+          cloudStatusText.textContent = "Local Cache";
+        }
+      }
+    }
+
+    async function syncPushToSupabase(showToastAlert = true) {
+      if (showToastAlert) showToast('Force syncing to Cloud...', '⏳');
+      await autoPushToCloud();
+      if (showToastAlert) showToast('Cloud updated successfully!', '☁️');
+    }
+
+    async function syncPullFromSupabase(showToastAlert = true) {
+      if (showToastAlert) showToast('Pulling latest from Cloud...', '⏳');
+      await autoPullFromCloud();
+      if (showToastAlert) showToast('Inventory updated from Cloud!', '☁️');
+    }
+
+    // ==============================================
+    // CSV EXPORT LOGIC
+    // ==============================================
+    window.toggleCsvDropdown = function(menuId) {
+      const el = document.getElementById(menuId);
+      if (el) el.classList.toggle('hidden');
+    };
+
+    window.exportInventoryToCSV = function(category = 'all') {
+      const filtered = inventory.filter(item => {
+        if (category === 'all') return true;
+        return item.category === category;
+      });
+
+      if (filtered.length === 0) {
+        showToast('No items matching selected category to export', '⚠️');
+        return;
+      }
+
+      const headers = [
+        "Component Type",
+        "Box / Shelf Number",
+        "Master Pull Model",
+        "Screen Size / Brand",
+        "Display Quality",
+        "Extra Notes",
+        "Total Compatible Count",
+        "Compatible Phone Models"
+      ];
+
+      const csvRows = [headers.join(",")];
+
+      filtered.forEach(item => {
+        const typeStr = item.category === 'glass' ? 'Tempered Glass' : 'Display Combo';
+        const modelsStr = (item.compatibleModels || []).join('; ');
+        
+        const row = [
+          `"${typeStr}"`,
+          `"${(item.boxNumber || '').replace(/"/g, '""')}"`,
+          `"${(item.masterModel || '').replace(/"/g, '""')}"`,
+          `"${(item.screenSize || '').replace(/"/g, '""')}"`,
+          `"${(item.displayQuality || '').replace(/"/g, '""')}"`,
+          `"${(item.extraNotes || '').replace(/"/g, '""')}"`,
+          (item.compatibleModels || []).length,
+          `"${modelsStr.replace(/"/g, '""')}"`
+        ];
+        csvRows.push(row.join(","));
+      });
+
+      const csvContent = "\uFEFF" + csvRows.join("\r\n");
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const dateStr = new Date().toISOString().slice(0, 10);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `mobile_one_${category}_items_${dateStr}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast(`Exported ${filtered.length} items to .CSV!`, '📊');
+    };
+
+    // ==============================================
+    // AUTOMATIC EMAIL BACKUP & DISPATCH LOGIC
+    // ==============================================
+    function loadEmailSettings() {
+      try {
+        const stored = localStorage.getItem(EMAIL_CONFIG_KEY);
+        if (stored) {
+          const cfg = JSON.parse(stored);
+          if (cfg.email) {
+            shopEmailInput.value = cfg.email;
+            autoEmailOnAddToggle.checked = !!cfg.autoPrompt;
+            emailStatusTag.textContent = "Saved";
+            emailStatusTag.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800";
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Email config load error:", e);
+      }
+      emailStatusTag.textContent = "Not Set";
+      emailStatusTag.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-700 text-slate-400";
+    }
+
+    function saveEmailSettings() {
+      const email = shopEmailInput.value.trim();
+      const autoPrompt = autoEmailOnAddToggle.checked;
+
+      if (!email || !email.includes('@')) {
+        showToast('Please enter a valid Email ID', '⚠️');
+        shopEmailInput.focus();
+        return;
+      }
+
+      localStorage.setItem(EMAIL_CONFIG_KEY, JSON.stringify({ email, autoPrompt }));
+      emailStatusTag.textContent = "Saved";
+      emailStatusTag.className = "text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-950 text-emerald-300 border border-emerald-800";
+      showToast('Email preferences saved successfully!', '📧');
+    }
+
+    function checkAutoEmailTrigger(box, master, count) {
+      try {
+        const stored = localStorage.getItem(EMAIL_CONFIG_KEY);
+        if (!stored) return;
+        const cfg = JSON.parse(stored);
+        if (cfg.email && cfg.autoPrompt) {
+          setTimeout(() => {
+            sendEmailBackupNow(false, `Added/Updated: ${master} (${box}) with ${count} models`);
+          }, 600);
+        }
+      } catch (e) {}
+    }
+
+    function sendEmailBackupNow(showManualToast = true, customNote = '') {
+      const stored = localStorage.getItem(EMAIL_CONFIG_KEY);
+      let email = shopEmailInput.value.trim();
+
+      if (stored) {
+        try {
+          const cfg = JSON.parse(stored);
+          if (cfg.email) email = cfg.email;
+        } catch (e) {}
+      }
+
+      if (!email || !email.includes('@')) {
+        switchTab('settings');
+        showToast('Please set your Email Address first', '⚠️');
+        shopEmailInput.focus();
+        return;
+      }
+
+      const totalBoxes = inventory.length;
+      let totalModels = 0;
+      let summaryLines = [];
+
+      inventory.forEach((item, index) => {
+        const count = (item.compatibleModels || []).length;
+        totalModels += count;
+        summaryLines.push(
+          `${index + 1}. [${item.category === 'glass' ? 'GLASS' : 'COMBO'}] ${item.masterModel} | ${item.boxNumber} | Specs: ${item.screenSize || 'N/A'} | Total Models: ${count}\n   Models: ${(item.compatibleModels || []).slice(0, 15).join(', ')}${count > 15 ? '...' : ''}`
+        );
+      });
+
+      const today = new Date().toLocaleDateString();
+      const subject = encodeURIComponent(`Mobile One Inventory Backup - ${today} (${totalBoxes} Boxes)`);
+      
+      let bodyText = `MOBILE ONE SHOP INVENTORY BACKUP\n`;
+      bodyText += `Date: ${today}\n`;
+      bodyText += `Total Boxes/Items: ${totalBoxes}\n`;
+      bodyText += `Total Compatible Phone Models Linked: ${totalModels}\n`;
+      if (customNote) {
+        bodyText += `Action Note: ${customNote}\n`;
+      }
+      bodyText += `--------------------------------------------------\n\n`;
+      bodyText += `INVENTORY SUMMARY:\n\n`;
+      bodyText += summaryLines.join('\n\n');
+      bodyText += `\n\n--------------------------------------------------\n`;
+      bodyText += `Generated by Mobile One Technician Terminal.\n`;
+
+      const mailtoUrl = `mailto:${encodeURIComponent(email)}?subject=${subject}&body=${encodeURIComponent(bodyText)}`;
+      window.location.href = mailtoUrl;
+
+      if (showManualToast) {
+        showToast('Email client opened with backup summary!', '📤');
+      }
+    }
+
+    // Helper: Toast Notifications
+    function showToast(message, icon = 'ℹ️') {
+      toastMessage.textContent = message;
+      toastIcon.textContent = icon;
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3200);
+    }
+
+    // Helper: Escape HTML
+    function escapeHtml(text) {
+      if (!text) return '';
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>
